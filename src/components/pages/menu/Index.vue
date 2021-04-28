@@ -1,0 +1,148 @@
+<template>
+  <div class='k-menu'>
+
+    <el-breadcrumb separator-class="el-icon-arrow-right">
+      <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
+      <el-breadcrumb-item>菜单管理</el-breadcrumb-item>
+    </el-breadcrumb>
+
+    <el-button type="primary" style="margin-top:10px;margin-bottom:10px;"
+      @click="$router.push('/menu/add')"
+    >添加</el-button>
+
+    <el-table
+      stripe
+      border
+      :data="menuList"
+      row-key="id"
+      style="width: 100%"
+      :tree-props="{children:'children'}"
+    >
+      <el-table-column
+        prop="id"
+        label="编号"
+        width="80"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="title"
+        label="名称"
+        width="120"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="icon"
+        label="图标"
+        width="120"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="url"
+        label="地址"
+        width="120"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="status"
+        label="状态"
+        width="120"
+      >
+        <template slot-scope="scope">
+          <el-tag :type="scope.row.status == '1' ? 'primary' : 'danger'">
+            {{ scope.row.status == '1' ? '启用' : '禁用' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作">
+        <template slot-scope="scope">
+          <el-button
+            type="primary"
+            @click="edit(scope.row.id)"
+          > 编辑 </el-button>
+          <el-button
+            type="danger"
+            @click="dialogVisible = true;delId = scope.row.id"
+          > 删除 </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <el-dialog
+      title="提示"
+      :visible.sync="dialogVisible"
+      width="30%"
+    >
+      <span>是否确定删除</span>
+      <span
+        slot="footer"
+        class="dialog-footer"
+      >
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button
+          type="primary"
+          @click="deleteMenu"
+        >确 定</el-button>
+      </span>
+    </el-dialog>
+
+  </div>
+</template>
+
+<script>
+import {mapActions} from 'vuex'
+export default {
+  name: "k-menu",
+  data() {
+    return {
+      dialogVisible: false, //控制对话框是否显示
+      menuList: [],
+      delId:''
+    };
+  },
+  mounted() {
+    this.getMenuList({istree:1})
+    .then((result) => {
+      this.menuList = result.data.list;
+    }).catch((err) => {
+      console.log(err);
+    });
+  },
+  methods: {
+    // 改成通过vuex,调用action来请求数据
+    ...mapActions(["getMenuList"]),
+    // getMenuList() {
+      // this.$axios
+      //   .get("/api/menulist", { params: { istree: 1 } })
+      //   .then(result => {
+      //     console.log(result);
+      //     this.menuList = result.data.list;
+      //   })
+      //   .catch(err => {
+      //     console.log(err);
+      //   });
+    // },
+
+    // 编辑菜案
+    edit(id) {
+      console.log(id);
+      this.$router.push("/menu/" + id)
+    },
+    // 删除菜单
+    deleteMenu() {
+      this.dialogVisible = false;
+
+      this.$axios.post('/api/menudelete',{id: this.delId})
+      .then((result) => {
+        console.log(result)
+        if(result.data.code === 200){
+          this.menuList = result.data.list
+        }
+      }).catch((err) => {
+        console.log(err)
+      });
+    }
+  }
+};
+</script>
+<style scoped>
+</style>
